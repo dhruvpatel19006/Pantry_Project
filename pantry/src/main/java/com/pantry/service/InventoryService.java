@@ -7,6 +7,7 @@ import com.pantry.repository.InventoryRepository;
 import com.pantry.util.ExpirationUtils;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.UUID;
 
 public class InventoryService {
     private final InventoryRepository repository;
@@ -49,5 +50,9 @@ public class InventoryService {
         List<UserItem> allItems = getAllItems();
         allItems.sort((item1, item2) -> item1.getExpirationDate().compareTo(item2.getExpirationDate()));
         return allItems;
+    }
+
+    public void removeItemById(UUID id) {
+        repository.removeItemById(id);
     }
 }

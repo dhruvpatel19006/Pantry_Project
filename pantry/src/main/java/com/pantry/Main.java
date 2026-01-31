@@ -1,7 +1,9 @@
 package com.pantry;
 
+import com.pantry.config.DatabaseConfig;
 import com.pantry.model.UserItem;
 import com.pantry.repository.InventoryRepository;
+import com.pantry.repository.SQLiteInventoryRepository;
 import com.pantry.service.InventoryService;
 
 import java.time.LocalDate;
@@ -11,10 +13,12 @@ import java.util.Scanner;
 
 public class Main {
 
-    private static final InventoryService inventoryService = new InventoryService(new InventoryRepository());
+    private static final SQLiteInventoryRepository repo = new SQLiteInventoryRepository();
+    private static final InventoryService inventoryService = new InventoryService(repo);
     private static final Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
+        DatabaseConfig.initializeDatabase();
         System.out.println("🍎 Welcome to Pantry Tracker");
 
         boolean running = true;
@@ -26,7 +30,8 @@ public class Main {
                 case "1" -> addItem();
                 case "2" -> listItems();
                 case "3" -> listExpiringSoon();
-                case "4" -> {
+                case "4" -> removeItem();
+                case "5" -> {
                     running = false;
                     System.out.println("👋 Goodbye!");
                 }
@@ -40,7 +45,8 @@ public class Main {
         System.out.println("1. Add item");
         System.out.println("2. View inventory");
         System.out.println("3. View items expiring soon");
-        System.out.println("4. Exit");
+        System.out.println("4. Remove Item");
+        System.out.println("5. Exit");
         System.out.print("Choose an option: ");
     }
 
@@ -76,14 +82,13 @@ public class Main {
         }
 
         System.out.println("\n📋 Inventory:");
-        for (UserItem item : items) {
-            System.out.printf(
-                    "- %s | Qty: %d | Expires: %s%n",
-                    item.getName(),
-                    item.getQuantity(),
-                    item.getExpirationDate()
-            );
+        for(int i = 0; i < items.size(); i++) {
+            UserItem item = items.get(i);
+            System.out.printf("%d. %s | Qty: %d | Expires: %s%n",
+                    i + 1, item.getName(), item.getQuantity(), item.getExpirationDate());
         }
+
+
     }
 
     private static void listExpiringSoon(){
@@ -106,4 +111,25 @@ public class Main {
             );
         }
     }
+
+    private static void removeItem() {
+        try {
+            listItems();
+            System.out.print("Enter item number to remove: ");
+            int itemNumber = Integer.parseInt(scanner.nextLine());
+
+            if (itemNumber < 1 || itemNumber > inventoryService.getAllItems().size()) {
+                System.out.println("❌ Invalid item number.");
+                return;
+            }
+
+            UserItem itemToRemove = inventoryService.getAllItems().get(itemNumber - 1);
+            inventoryService.removeItemById(itemToRemove.getId());
+            System.out.println("✅ Item removed.");
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("❌ Invalid item number.");
+        }
+    }
+
 }
