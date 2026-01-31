@@ -13,7 +13,7 @@ import java.util.Scanner;
 
 public class Main {
 
-    private static final SQLiteInventoryRepository repo = new SQLiteInventoryRepository();
+    private static final InventoryRepository repo = new SQLiteInventoryRepository();
     private static final InventoryService inventoryService = new InventoryService(repo);
     private static final Scanner scanner = new Scanner(System.in);
 
@@ -45,7 +45,7 @@ public class Main {
         System.out.println("1. Add item");
         System.out.println("2. View inventory");
         System.out.println("3. View items expiring soon");
-        System.out.println("4. Remove Item");
+        System.out.println("4. Remove item");
         System.out.println("5. Exit");
         System.out.print("Choose an option: ");
     }
@@ -73,63 +73,78 @@ public class Main {
         }
     }
 
-    private static void listItems() {
+    /**
+     * Lists all items and returns them for reuse.
+     */
+    private static List<UserItem> listItems() {
         List<UserItem> items = inventoryService.getAllItems();
 
         if (items.isEmpty()) {
             System.out.println("📦 Inventory is empty.");
-            return;
+            return items;
         }
 
         System.out.println("\n📋 Inventory:");
-        for(int i = 0; i < items.size(); i++) {
+        for (int i = 0; i < items.size(); i++) {
             UserItem item = items.get(i);
             System.out.printf("%d. %s | Qty: %d | Expires: %s%n",
-                    i + 1, item.getName(), item.getQuantity(), item.getExpirationDate());
-        }
-
-
-    }
-
-    private static void listExpiringSoon(){
-        System.out.println("Enter number of days: ");
-        int days = Integer.parseInt(scanner.nextLine());
-        List<UserItem> items = inventoryService.getItemsExpiringWithinDays(days);
-
-        if (items.isEmpty()) {
-            System.out.println("📦 No items expiring soon.");
-            return;
-        }
-
-        System.out.println("\n📋 Items expiring soon:");
-        for (UserItem item : items) {
-            System.out.printf(
-                    "- %s | Qty: %d | Expires: %s%n",
+                    i + 1,
                     item.getName(),
                     item.getQuantity(),
-                    item.getExpirationDate()
-            );
+                    item.getExpirationDate());
+        }
+
+        return items;
+    }
+
+    private static void listExpiringSoon() {
+        try {
+            System.out.print("Enter number of days: ");
+            int days = Integer.parseInt(scanner.nextLine());
+
+            List<UserItem> items = inventoryService.getItemsExpiringWithinDays(days);
+
+            if (items.isEmpty()) {
+                System.out.println("📦 No items expiring soon.");
+                return;
+            }
+
+            System.out.println("\n📋 Items expiring soon:");
+            for (int i = 0; i < items.size(); i++) {
+                UserItem item = items.get(i);
+                System.out.printf("%d. %s | Qty: %d | Expires: %s%n",
+                        i + 1,
+                        item.getName(),
+                        item.getQuantity(),
+                        item.getExpirationDate());
+            }
+
+        } catch (NumberFormatException e) {
+            System.out.println("❌ Days must be a number.");
         }
     }
 
     private static void removeItem() {
         try {
-            listItems();
+            List<UserItem> items = listItems();
+
+            if (items.isEmpty()) return;
+
             System.out.print("Enter item number to remove: ");
             int itemNumber = Integer.parseInt(scanner.nextLine());
 
-            if (itemNumber < 1 || itemNumber > inventoryService.getAllItems().size()) {
+            if (itemNumber < 1 || itemNumber > items.size()) {
                 System.out.println("❌ Invalid item number.");
                 return;
             }
 
-            UserItem itemToRemove = inventoryService.getAllItems().get(itemNumber - 1);
+            UserItem itemToRemove = items.get(itemNumber - 1);
             inventoryService.removeItemById(itemToRemove.getId());
+
             System.out.println("✅ Item removed.");
 
-        } catch (IllegalArgumentException e) {
+        } catch (NumberFormatException e) {
             System.out.println("❌ Invalid item number.");
         }
     }
-
 }
