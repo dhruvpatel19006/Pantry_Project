@@ -60,17 +60,57 @@ public class SQLiteInventoryRepository implements InventoryRepository{
 
     @Override
     public UserItem findItemById(UUID id) {
-        // Implementation for finding item by ID in SQLite database
+        String sql = "SELECT * FROM user_items WHERE id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, id.toString());
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return new UserItem(
+                    UUID.fromString(rs.getString("id")),
+                    rs.getString("name"),
+                    java.time.LocalDate.parse(rs.getString("expiration_date")),
+                    rs.getInt("quantity")
+                );
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error finding item by ID", e);
+        }
         return null;
     }
 
     @Override
     public void removeItemById(UUID id) {
-        // Implementation for removing item by ID in SQLite database
+        String sql = "DELETE FROM user_items WHERE id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, id.toString());
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error removing item by ID", e);
+        }
     }
 
     @Override
     public void updateItem(UserItem item) {
-        // Implementation for updating item in SQLite database
+        String sql = "UPDATE user_items SET name = ?, expiration_date = ?, quantity = ? WHERE id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, item.getName());
+            pstmt.setString(2, item.getExpirationDate().toString());
+            pstmt.setInt(3, item.getQuantity());
+            pstmt.setString(4, item.getId().toString());
+
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error updating item", e);
+        }
     }
+
 }
