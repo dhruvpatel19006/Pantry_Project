@@ -17,6 +17,14 @@ public class UserItem {
         this.quantity = quantity;
     }
 
+    public UserItem(UUID id, String name, LocalDate expirationDate, int quantity) {
+        this.id = id;
+        this.name = name;
+        this.expirationDate = expirationDate;
+        this.dateAdded = LocalDate.now();
+        this.quantity = quantity;
+    }
+
     public UUID getId() {
         return id;
     }
