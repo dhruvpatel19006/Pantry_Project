@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 public class User {
     private String username;
     private String email;
-    // private String passwordHashString;
+    private String passwordHashString;
     private static int idCounter = 1;
     private final int id;
     private LocalDateTime createdAt;
